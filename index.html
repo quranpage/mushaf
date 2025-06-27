@@ -2,10 +2,85 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Mushaf Quran</title>
+  <title>Mushaf Viewer</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f7f7f7;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .gallery-item {
+      background: white;
+      padding: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      text-align: center;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+    .caption {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-  <h1>Selamat Datang di Mushaf Quran</h1>
-  <p>Ini adalah halaman awal. Gambar akan ditambahkan nanti.</p>
+  <h1>Mushaf Viewer</h1>
+  <div class="gallery">
+    <div class="gallery-item">
+      <img src="images/001_Al-Fatihah.webp" alt="Surah Al-Fatihah - Mushaf Quran">
+      <div class="caption">Surah Al-Fatihah</div>
+    </div>
+    <div class="gallery-item">
+      <img src="images/002_Al-Baqarah.webp" alt="Surah Al-Baqarah - Mushaf Quran">
+      <div class="caption">Surah Al-Baqarah</div>
+    </div>
+    <div class="gallery-item">
+      <img src="images/003_Al-Imran.webp" alt="Surah Al-Imran - Mushaf Quran">
+      <div class="caption">Surah Al-Imran</div>
+    </div>
+    <div class="gallery-item">
+      <img src="images/004_An-Nisa.webp" alt="Surah An-Nisa - Mushaf Quran">
+      <div class="caption">Surah An-Nisa</div>
+    </div>
+    <div class="gallery-item">
+      <img src="images/005_Al-Maidah.webp" alt="Surah Al-Maidah - Mushaf Quran">
+      <div class="caption">Surah Al-Maidah</div>
+    </div>
+    <div class="gallery-item">
+      <img src="images/006_Al-Anam.webp" alt="Surah Al-An'am - Mushaf Quran">
+      <div class="caption">Surah Al-An'am</div>
+    </div>
+    <div class="gallery-item">
+      <img src="images/007_Al-Araf.webp" alt="Surah Al-A'raf - Mushaf Quran">
+      <div class="caption">Surah Al-A'raf</div>
+    </div>
+    <div class="gallery-item">
+      <img src="images/008_Al-Anfal.webp" alt="Surah Al-Anfal - Mushaf Quran">
+      <div class="caption">Surah Al-Anfal</div>
+    </div>
+    <div class="gallery-item">
+      <img src="images/009_At-Tawbah.webp" alt="Surah At-Tawbah - Mushaf Quran">
+      <div class="caption">Surah At-Tawbah</div>
+    </div>
+    <div class="gallery-item">
+      <img src="images/010_Yunus.webp" alt="Surah Yunus - Mushaf Quran">
+      <div class="caption">Surah Yunus</div>
+    </div>
+    <div class="gallery-item">
+      <img src="images/011_Hud.webp" alt="Surah Hud - Mushaf Quran">
+      <div class="caption">Surah Hud</div>
+    </div>
+  </div>
 </body>
 </html>
