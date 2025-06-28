@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <title>Daftar Juz - Mushaf Digital</title>
+  <meta name="description" content="Navigasi cepat berdasarkan Juz 1 sampai 30 dalam Mushaf Al-Quran Digital">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f9f9f9;
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 {
+      margin-bottom: 1rem;
+    }
+    .juz-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .juz-box {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 1rem 1.5rem;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: 0.2s;
+    }
+    .juz-box:hover {
+      background: #eef;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    nav {
+      margin-top: 2rem;
+    }
+    a {
+      margin: 0 1rem;
+      font-size: 1rem;
+      color: #0077cc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Daftar Juz dalam Mushaf Digital</h1>
+  <div class="juz-container" id="juzContainer">Loading...</div>
+
+  <nav>
+    <a href="index.html">🏠 Beranda</a>
+  </nav>
+
+  <script>
+    fetch("data/juz-mapping.json")
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById("juzContainer");
+        container.innerHTML = "";
+
+        for (let i = 1; i <= 30; i++) {
+          const page = data[String(i)];
+          const btn = document.createElement("div");
+          btn.className = "juz-box";
+          btn.textContent = `Juz ${i}`;
+          btn.onclick = () => {
+            const href = `halaman-${String(page).padStart(3, '0')}.html`;
+            window.location.href = href;
+          };
+          container.appendChild(btn);
+        }
+      })
+      .catch(err => {
+        document.getElementById("juzContainer").innerHTML = "Gagal memuat data.";
+        console.error(err);
+      });
+  </script>
+
+</body>
+</html>
