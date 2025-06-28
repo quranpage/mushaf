@@ -30,8 +30,8 @@ let aliasMap = {};
 
 // Load both main surah map and alias map
 Promise.all([
-  fetch("/data/surah-mapping.json").then(res => res.json()),
-  fetch("/data/surah-alias.json").then(res => res.json())
+  fetch("data/surah-mapping.json").then(res => res.json()),
+  fetch("data/surah-alias.json").then(res => res.json())
 ]).then(([surahData, aliasData]) => {
   surahMap = surahData;
   aliasMap = aliasData;
@@ -109,20 +109,5 @@ document.getElementById("searchSurah").addEventListener("input", function () {
     <a href="halaman-002.html">Halaman 002 →</a>
   </nav>
 </body>
-
-<script>
-Promise.all([
-  fetch("/data/surah-mapping.json"),
-  fetch("/data/surah-alias.json")
-]).then(([res1, res2]) => {
-  console.log("mapping status:", res1.status);
-  console.log("alias status:", res2.status);
-  return Promise.all([res1.json(), res2.json()]);
-}).then(([surahMap, aliasMap]) => {
-  console.log("mapping keys:", Object.keys(surahMap).slice(0,5));
-  console.log("alias keys:", Object.keys(aliasMap).slice(0,5));
-  console.log("alias['baqoroh'] →", aliasMap["baqoroh"]);
-}).catch(err => console.error(err));
-</script>
 
 </html>
