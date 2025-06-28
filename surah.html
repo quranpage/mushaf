@@ -68,20 +68,19 @@
         const container = document.getElementById("surahContainer");
         container.innerHTML = "";
 
-        // Ambil dan urutkan nama surah sesuai urutan mushaf (berdasarkan nomor halaman)
-        const entries = Object.entries(data);
-        entries.sort((a, b) => a[1] - b[1]); // sort by page
+        const entries = Object.entries(data)
+          .sort((a, b) => a[1] - b[1]); // Sort by page number
 
-        for (const [name, page] of entries) {
+        entries.forEach(([name, page], index) => {
           const div = document.createElement("div");
           div.className = "surah-box";
-          div.textContent = name;
+          div.textContent = `(${index + 1}) ${name}`;
           div.onclick = () => {
             const href = `halaman-${String(page).padStart(3, '0')}.html`;
             window.open(href, '_blank');
           };
           container.appendChild(div);
-        }
+        });
       })
       .catch(err => {
         document.getElementById("surahContainer").innerHTML = "Gagal memuat data.";
