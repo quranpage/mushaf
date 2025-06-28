@@ -21,4 +21,38 @@
     <a href="halaman-002.html">Halaman 002 →</a>
   </nav>
 </body>
+<!-- Search Surah -->
+<div style="text-align:center; margin-top:2em;">
+  <input type="text" id="searchSurah" placeholder="Search Surah..." />
+  <ul id="suggestionList" style="list-style:none; padding:0; margin-top:0.5em;"></ul>
+</div>
+
+<script>
+let surahMap = {};
+
+fetch("/data/surah-mapping.json")
+  .then(res => res.json())
+  .then(data => { surahMap = data; });
+
+document.getElementById("searchSurah").addEventListener("input", function () {
+  const keyword = this.value.toLowerCase();
+  const list = document.getElementById("suggestionList");
+  list.innerHTML = "";
+
+  Object.keys(surahMap).forEach(name => {
+    if (name.toLowerCase().includes(keyword) && keyword.length >= 2) {
+      const li = document.createElement("li");
+      li.textContent = name;
+      li.style.cursor = "pointer";
+      li.style.padding = "5px";
+      li.style.borderBottom = "1px solid #ccc";
+      li.onclick = () => {
+        const page = surahMap[name];
+        window.location.href = `halaman-${String(page).padStart(3, '0')}.html`;
+      };
+      list.appendChild(li);
+    }
+  });
+});
+</script>
 </html>
