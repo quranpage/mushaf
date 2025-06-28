@@ -73,9 +73,9 @@
           btn.className = "juz-box";
           btn.textContent = `Juz ${i}`;
           btn.onclick = () => {
-            const href = `halaman-${String(page).padStart(3, '0')}.html`;
-            window.location.href = href;
-          };
+  const href = `halaman-${String(page).padStart(3, '0')}.html`;
+  window.open(href, '_blank');
+};
           container.appendChild(btn);
         }
       })
