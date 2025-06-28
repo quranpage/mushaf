@@ -15,12 +15,8 @@
 </head>
 <body>
   <h1>Halaman 001 - Mushaf Digital</h1>
-  <img src="images/001_Al-Fatihah.webp" alt="Gambar Mushaf halaman 001 - Al-Fatihah">
-  <nav>
-    <a href="index.html">🏠 Beranda</a>
-    <a href="halaman-002.html">Halaman 002 →</a>
-  </nav>
-</body>
+
+
 <!-- Search Surah -->
 <div style="text-align:center; margin-top:2em;">
   <input type="text" id="searchSurah" placeholder="Search Surah..." style="width:60%; max-width:300px;" />
@@ -30,16 +26,41 @@
 
 <script>
 let surahMap = {};
+let aliasMap = {};
 
-fetch("/data/surah-mapping.json")
-  .then(res => res.json())
-  .then(data => { surahMap = data; });
+// Load both main surah map and alias map
+Promise.all([
+  fetch("/data/surah-mapping.json").then(res => res.json()),
+  fetch("/data/surah-alias.json").then(res => res.json())
+]).then(([surahData, aliasData]) => {
+  surahMap = surahData;
+  aliasMap = aliasData;
+});
+
+function normalize(input) {
+  return input.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function resolveSurah(keyword) {
+  const normalized = normalize(keyword);
+
+  // 1. Check canonical match
+  for (const name in surahMap) {
+    if (normalize(name).includes(normalized)) return name;
+  }
+
+  // 2. Check alias map
+  if (aliasMap[normalized]) return aliasMap[normalized];
+
+  return null;
+}
 
 function handleSearch() {
-  const keyword = document.getElementById("searchSurah").value.toLowerCase();
-  const match = Object.entries(surahMap).find(([name]) => name.toLowerCase() === keyword);
-  if (match) {
-    const page = match[1];
+  const keyword = document.getElementById("searchSurah").value;
+  const matchedName = resolveSurah(keyword);
+
+  if (matchedName && surahMap[matchedName]) {
+    const page = surahMap[matchedName];
     window.location.href = `halaman-${String(page).padStart(3, '0')}.html`;
   } else {
     alert("Surah not found. Please try a different name.");
@@ -47,31 +68,45 @@ function handleSearch() {
 }
 
 document.getElementById("searchSurah").addEventListener("keypress", function (e) {
-  if (e.key === "Enter") {
-    handleSearch();
-  }
+  if (e.key === "Enter") handleSearch();
 });
 
 document.getElementById("searchSurah").addEventListener("input", function () {
-  const keyword = this.value.toLowerCase();
+  const keyword = this.value;
+  const normalized = normalize(keyword);
   const list = document.getElementById("suggestionList");
   list.innerHTML = "";
 
-  Object.keys(surahMap).forEach(name => {
-    if (name.toLowerCase().includes(keyword) && keyword.length >= 2) {
-      const li = document.createElement("li");
-      li.textContent = name;
-      li.style.cursor = "pointer";
-      li.style.padding = "5px";
-      li.style.borderBottom = "1px solid #ccc";
-      li.onclick = () => {
-        const page = surahMap[name];
-        window.location.href = `halaman-${String(page).padStart(3, '0')}.html`;
-      };
-      list.appendChild(li);
-    }
+  const suggestions = new Set();
+
+  for (const name in surahMap) {
+    if (normalize(name).includes(normalized)) suggestions.add(name);
+  }
+
+  for (const alias in aliasMap) {
+    if (alias.includes(normalized)) suggestions.add(aliasMap[alias]);
+  }
+
+  suggestions.forEach(name => {
+    const li = document.createElement("li");
+    li.textContent = name;
+    li.style.cursor = "pointer";
+    li.style.padding = "5px";
+    li.style.borderBottom = "1px solid #ccc";
+    li.onclick = () => {
+      const page = surahMap[name];
+      window.location.href = `halaman-${String(page).padStart(3, '0')}.html`;
+    };
+    list.appendChild(li);
   });
 });
 </script>
 
+  
+  <img src="images/001_Al-Fatihah.webp" alt="Gambar Mushaf halaman 001 - Al-Fatihah">
+  <nav>
+    <a href="index.html">🏠 Beranda</a>
+    <a href="halaman-002.html">Halaman 002 →</a>
+  </nav>
+</body>
 </html>
