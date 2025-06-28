@@ -23,7 +23,8 @@
 </body>
 <!-- Search Surah -->
 <div style="text-align:center; margin-top:2em;">
-  <input type="text" id="searchSurah" placeholder="Search Surah..." />
+  <input type="text" id="searchSurah" placeholder="Search Surah..." style="width:60%; max-width:300px;" />
+  <button onclick="handleSearch()" style="padding: 0.5em 1em; margin-left: 0.5em;">Search</button>
   <ul id="suggestionList" style="list-style:none; padding:0; margin-top:0.5em;"></ul>
 </div>
 
@@ -33,6 +34,23 @@ let surahMap = {};
 fetch("/data/surah-mapping.json")
   .then(res => res.json())
   .then(data => { surahMap = data; });
+
+function handleSearch() {
+  const keyword = document.getElementById("searchSurah").value.toLowerCase();
+  const match = Object.entries(surahMap).find(([name]) => name.toLowerCase() === keyword);
+  if (match) {
+    const page = match[1];
+    window.location.href = `halaman-${String(page).padStart(3, '0')}.html`;
+  } else {
+    alert("Surah not found. Please try a different name.");
+  }
+}
+
+document.getElementById("searchSurah").addEventListener("keypress", function (e) {
+  if (e.key === "Enter") {
+    handleSearch();
+  }
+});
 
 document.getElementById("searchSurah").addEventListener("input", function () {
   const keyword = this.value.toLowerCase();
@@ -55,4 +73,5 @@ document.getElementById("searchSurah").addEventListener("input", function () {
   });
 });
 </script>
+
 </html>
