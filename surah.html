@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <title>Daftar Surah - Mushaf Digital</title>
+  <meta name="description" content="Navigasi cepat berdasarkan Surah dalam Mushaf Al-Quran Digital">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f9f9f9;
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 {
+      margin-bottom: 1rem;
+    }
+    .surah-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .surah-box {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 0.6rem 1rem;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+      transition: 0.2s;
+    }
+    .surah-box:hover {
+      background: #eef;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+    }
+    nav {
+      margin-top: 2rem;
+    }
+    a {
+      margin: 0 1rem;
+      font-size: 1rem;
+      color: #0077cc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Daftar Surah dalam Mushaf Digital</h1>
+  <div class="surah-container" id="surahContainer">Loading...</div>
+
+  <nav>
+    <a href="index.html">🏠 Beranda</a>
+    <a href="juz.html">📖 Daftar Juz</a>
+  </nav>
+
+  <script>
+    fetch("data/surah-mapping.json")
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById("surahContainer");
+        container.innerHTML = "";
+
+        // Ambil dan urutkan nama surah sesuai urutan mushaf (berdasarkan nomor halaman)
+        const entries = Object.entries(data);
+        entries.sort((a, b) => a[1] - b[1]); // sort by page
+
+        for (const [name, page] of entries) {
+          const div = document.createElement("div");
+          div.className = "surah-box";
+          div.textContent = name;
+          div.onclick = () => {
+            const href = `halaman-${String(page).padStart(3, '0')}.html`;
+            window.open(href, '_blank');
+          };
+          container.appendChild(div);
+        }
+      })
+      .catch(err => {
+        document.getElementById("surahContainer").innerHTML = "Gagal memuat data.";
+        console.error(err);
+      });
+  </script>
+
+</body>
+</html>
