@@ -2,24 +2,24 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Test Pencarian Surah</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pencarian Surah - Mushaf Digital</title>
   <style>
     body {
       font-family: sans-serif;
-      padding: 2rem;
       background: #f4f4f4;
       text-align: center;
+      padding: 2rem;
+    }
+    input, button {
+      font-size: 1rem;
+      padding: 0.5rem;
     }
     input {
-      padding: 0.5rem;
-      font-size: 1rem;
       width: 300px;
     }
     button {
-      padding: 0.5rem 1rem;
       margin-left: 0.5rem;
-      font-size: 1rem;
     }
     ul#suggestionList {
       list-style: none;
@@ -42,71 +42,105 @@
   </style>
 </head>
 <body>
-  <h1>Cari Surah</h1>
-  <input type="text" id="searchSurah" placeholder="Contoh: Yasin atau يس" />
-  <button onclick="handleSearch()">Search</button>
+  <h1>Pencarian Surah</h1>
+  <input type="text" id="searchSurah" placeholder="Ketik nama surah atau يس" />
+  <button onclick="handleSearch()">🔍 Cari</button>
   <ul id="suggestionList"></ul>
 
   <script>
     let surahMap = {};
     let aliasMap = {};
 
-    // Load data mapping
     Promise.all([
       fetch("data/surah-mapping.json").then(res => res.json()),
       fetch("data/surah-alias.json").then(res => res.json())
     ]).then(([surahData, aliasData]) => {
       surahMap = surahData;
       aliasMap = aliasData;
-      console.log("✅ surahMap & aliasMap loaded");
     });
 
     function normalize(input) {
       return input.trim().toLowerCase().replace(/[\s\W_]+/g, '');
     }
 
-    function resolveSurah(keyword) {
-      const normalized = normalize(keyword);
+    function resolveSurah(input) {
+      const norm = normalize(input);
 
-      // 1. Canonical match
       for (const name in surahMap) {
-        if (normalize(name).includes(normalized)) return name;
+        if (normalize(name).includes(norm)) return name;
       }
-
-      // 2. Alias map
-      if (aliasMap[normalized]) return aliasMap[normalized];
+      if (aliasMap[norm]) return aliasMap[norm];
 
       return null;
     }
 
-    function handleSearch() {
-      const keyword = document.getElementById("searchSurah").value;
-      const matchedName = resolveSurah(keyword);
+    function levenshtein(a, b) {
+      const m = a.length, n = b.length;
+      if (m === 0) return n;
+      if (n === 0) return m;
+      const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+      for (let i = 0; i <= m; i++) dp[i][0] = i;
+      for (let j = 0; j <= n; j++) dp[0][j] = j;
+      for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+          dp[i][j] = a[i - 1] === b[j - 1]
+            ? dp[i - 1][j - 1]
+            : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+        }
+      }
+      return dp[m][n];
+    }
 
-      if (matchedName && surahMap[matchedName]) {
-        const page = surahMap[matchedName];
-        const url = `halaman-${String(page).padStart(3, '0')}.html`;
-        window.location.href = url;
+    function findClosest(input) {
+      const norm = normalize(input);
+      const candidates = [];
+
+      for (const name in surahMap) {
+        const dist = levenshtein(norm, normalize(name));
+        if (dist <= 3) candidates.push({ name, dist });
+      }
+      for (const alias in aliasMap) {
+        const dist = levenshtein(norm, normalize(alias));
+        if (dist <= 3) candidates.push({ name: aliasMap[alias], dist });
+      }
+
+      candidates.sort((a, b) => a.dist - b.dist);
+      return candidates.length ? candidates[0].name : null;
+    }
+
+    function handleSearch() {
+      const input = document.getElementById("searchSurah").value;
+      const match = resolveSurah(input);
+
+      if (match && surahMap[match]) {
+        const page = surahMap[match];
+        window.location.href = `halaman-${String(page).padStart(3, '0')}.html`;
       } else {
-        alert("Surah tidak ditemukan.");
+        const suggestion = findClosest(input);
+        if (suggestion && surahMap[suggestion]) {
+          if (confirm(`Surah tidak ditemukan.\nMaksud Anda: "${suggestion}"?`)) {
+            const page = surahMap[suggestion];
+            window.location.href = `halaman-${String(page).padStart(3, '0')}.html`;
+          }
+        } else {
+          alert("Surah tidak ditemukan.");
+        }
       }
     }
 
-    // Autocomplete / Suggestion
     document.getElementById("searchSurah").addEventListener("input", function () {
       const keyword = this.value;
-      const normalized = normalize(keyword);
+      const norm = normalize(keyword);
       const list = document.getElementById("suggestionList");
       list.innerHTML = "";
 
       const suggestions = new Set();
 
       for (const name in surahMap) {
-        if (normalize(name).includes(normalized)) suggestions.add(name);
+        if (normalize(name).includes(norm)) suggestions.add(name);
       }
-
       for (const alias in aliasMap) {
-        if (normalize(alias).includes(normalized)) suggestions.add(aliasMap[alias]);
+        if (normalize(alias).includes(norm)) suggestions.add(aliasMap[alias]);
       }
 
       suggestions.forEach(name => {
@@ -116,8 +150,6 @@
           const page = surahMap[name];
           if (page) {
             window.location.href = `halaman-${String(page).padStart(3, '0')}.html`;
-          } else {
-            alert("Surah ditemukan, tapi mapping-nya tidak valid.");
           }
         };
         list.appendChild(li);
