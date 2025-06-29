@@ -38,7 +38,7 @@ Promise.all([
 });
 
 function normalize(input) {
-  return input.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  return input.trim().toLowerCase().replace(/[\s\W_]+/g, '');
 }
 
 function resolveSurah(keyword) {
