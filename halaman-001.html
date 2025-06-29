@@ -25,135 +25,86 @@
 </div>
 
 <script>
-let surahMap = {};
-let aliasMap = {};
+    let surahMap = {};
+    let aliasMap = {};
 
-// Load mapping data
-Promise.all([
-  fetch("data/surah-mapping.json").then(res => res.json()),
-  fetch("data/surah-alias.json").then(res => res.json())
-]).then(([surahData, aliasData]) => {
-  surahMap = surahData;
-  aliasMap = aliasData;
-});
+    // Load data mapping
+    Promise.all([
+      fetch("data/surah-mapping.json").then(res => res.json()),
+      fetch("data/surah-alias.json").then(res => res.json())
+    ]).then(([surahData, aliasData]) => {
+      surahMap = surahData;
+      aliasMap = aliasData;
+      console.log("✅ surahMap & aliasMap loaded");
+    });
 
-function normalize(input) {
-  return input.trim().toLowerCase().replace(/[\s\W_]+/g, '');
-}
+    function normalize(input) {
+      return input.trim().toLowerCase().replace(/[\s\W_]+/g, '');
+    }
 
-function levenshtein(a, b) {
-  const m = a.length, n = b.length;
-  if (m === 0) return n;
-  if (n === 0) return m;
-  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
-  for (let i = 0; i <= m; i++) dp[i][0] = i;
-  for (let j = 0; j <= n; j++) dp[0][j] = j;
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      if (a[i - 1] === b[j - 1]) {
-        dp[i][j] = dp[i - 1][j - 1];
+    function resolveSurah(keyword) {
+      const normalized = normalize(keyword);
+
+      // 1. Canonical match
+      for (const name in surahMap) {
+        if (normalize(name).includes(normalized)) return name;
+      }
+
+      // 2. Alias map
+      if (aliasMap[normalized]) return aliasMap[normalized];
+
+      return null;
+    }
+
+    function handleSearch() {
+      const keyword = document.getElementById("searchSurah").value;
+      const matchedName = resolveSurah(keyword);
+
+      if (matchedName && surahMap[matchedName]) {
+        const page = surahMap[matchedName];
+        const url = `halaman-${String(page).padStart(3, '0')}.html`;
+        window.location.href = url;
       } else {
-        dp[i][j] = 1 + Math.min(
-          dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]
-        );
+        alert("Surah tidak ditemukan.");
       }
     }
-  }
-  return dp[m][n];
-}
 
-function resolveSurah(keyword) {
-  const normalized = normalize(keyword);
+    // Autocomplete / Suggestion
+    document.getElementById("searchSurah").addEventListener("input", function () {
+      const keyword = this.value;
+      const normalized = normalize(keyword);
+      const list = document.getElementById("suggestionList");
+      list.innerHTML = "";
 
-  // Canonical match
-  for (const name in surahMap) {
-    if (normalize(name).includes(normalized)) return name;
-  }
+      const suggestions = new Set();
 
-  // Alias match
-  if (aliasMap[normalized]) return aliasMap[normalized];
-
-  return null;
-}
-
-function handleSearch() {
-  const input = document.getElementById("searchSurah").value;
-  const normalized = normalize(input);
-  const matchedName = resolveSurah(input);
-
-  if (matchedName && surahMap[matchedName]) {
-    const page = surahMap[matchedName];
-    window.location.href = `halaman-${String(page).padStart(3, '0')}.html`;
-  } else {
-    // Fuzzy suggestion
-    let candidates = [];
-
-    for (const name in surahMap) {
-      const dist = levenshtein(normalized, normalize(name));
-      if (dist <= 3) candidates.push({ name, dist });
-    }
-
-    for (const alias in aliasMap) {
-      const dist = levenshtein(normalized, normalize(alias));
-      if (dist <= 3) candidates.push({ name: aliasMap[alias], dist });
-    }
-
-    candidates.sort((a, b) => a.dist - b.dist);
-
-    if (candidates.length > 0) {
-      const suggestion = candidates[0].name;
-      if (confirm(`Surah tidak ditemukan.\nMaksud Anda: "${suggestion}"?`)) {
-        const page = surahMap[suggestion];
-        if (page) {
-          window.location.href = `halaman-${String(page).padStart(3, '0')}.html`;
-        } else {
-          alert("Surah tidak ditemukan.");
-        }
+      for (const name in surahMap) {
+        if (normalize(name).includes(normalized)) suggestions.add(name);
       }
-    } else {
-      alert("Surah tidak ditemukan. Coba ketik nama lain.");
-    }
-  }
-}
 
-document.getElementById("searchSurah").addEventListener("keypress", function (e) {
-  if (e.key === "Enter") handleSearch();
-});
-
-document.getElementById("searchSurah").addEventListener("input", function () {
-  const keyword = this.value;
-  const normalized = normalize(keyword);
-  const list = document.getElementById("suggestionList");
-  list.innerHTML = "";
-
-  const suggestions = new Set();
-
-  for (const name in surahMap) {
-    if (normalize(name).includes(normalized)) suggestions.add(name);
-  }
-
-  for (const alias in aliasMap) {
-    if (normalize(alias).includes(normalized)) suggestions.add(aliasMap[alias]);
-  }
-
-  suggestions.forEach(name => {
-    const li = document.createElement("li");
-    li.textContent = name;
-    li.style.cursor = "pointer";
-    li.style.padding = "5px";
-    li.style.borderBottom = "1px solid #ccc";
-    li.onclick = () => {
-      const page = surahMap[name];
-      if (page) {
-        window.location.href = `halaman-${String(page).padStart(3, '0')}.html`;
+      for (const alias in aliasMap) {
+        if (normalize(alias).includes(normalized)) suggestions.add(aliasMap[alias]);
       }
-    };
-    list.appendChild(li);
-  });
-});
-</script>
 
+      suggestions.forEach(name => {
+        const li = document.createElement("li");
+        li.textContent = name;
+        li.onclick = () => {
+          const page = surahMap[name];
+          if (page) {
+            window.location.href = `halaman-${String(page).padStart(3, '0')}.html`;
+          } else {
+            alert("Surah ditemukan, tapi mapping-nya tidak valid.");
+          }
+        };
+        list.appendChild(li);
+      });
+    });
 
+    document.getElementById("searchSurah").addEventListener("keypress", function (e) {
+      if (e.key === "Enter") handleSearch();
+    });
+  </script>
   
   <img src="images/001_Al-Fatihah.webp" alt="Gambar Mushaf halaman 001 - Al-Fatihah">
   <nav>
