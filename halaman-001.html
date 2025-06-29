@@ -28,7 +28,7 @@
 let surahMap = {};
 let aliasMap = {};
 
-// Load both main surah map and alias map
+// Load mapping data
 Promise.all([
   fetch("data/surah-mapping.json").then(res => res.json()),
   fetch("data/surah-alias.json").then(res => res.json())
@@ -41,29 +41,78 @@ function normalize(input) {
   return input.trim().toLowerCase().replace(/[\s\W_]+/g, '');
 }
 
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (a[i - 1] === b[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1];
+      } else {
+        dp[i][j] = 1 + Math.min(
+          dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]
+        );
+      }
+    }
+  }
+  return dp[m][n];
+}
+
 function resolveSurah(keyword) {
   const normalized = normalize(keyword);
 
-  // 1. Check canonical match
+  // Canonical match
   for (const name in surahMap) {
     if (normalize(name).includes(normalized)) return name;
   }
 
-  // 2. Check alias map
+  // Alias match
   if (aliasMap[normalized]) return aliasMap[normalized];
 
   return null;
 }
 
 function handleSearch() {
-  const keyword = document.getElementById("searchSurah").value;
-  const matchedName = resolveSurah(keyword);
+  const input = document.getElementById("searchSurah").value;
+  const normalized = normalize(input);
+  const matchedName = resolveSurah(input);
 
   if (matchedName && surahMap[matchedName]) {
     const page = surahMap[matchedName];
     window.location.href = `halaman-${String(page).padStart(3, '0')}.html`;
   } else {
-    alert("Surah not found. Please try a different name.");
+    // Fuzzy suggestion
+    let candidates = [];
+
+    for (const name in surahMap) {
+      const dist = levenshtein(normalized, normalize(name));
+      if (dist <= 3) candidates.push({ name, dist });
+    }
+
+    for (const alias in aliasMap) {
+      const dist = levenshtein(normalized, normalize(alias));
+      if (dist <= 3) candidates.push({ name: aliasMap[alias], dist });
+    }
+
+    candidates.sort((a, b) => a.dist - b.dist);
+
+    if (candidates.length > 0) {
+      const suggestion = candidates[0].name;
+      if (confirm(`Surah tidak ditemukan.\nMaksud Anda: "${suggestion}"?`)) {
+        const page = surahMap[suggestion];
+        if (page) {
+          window.location.href = `halaman-${String(page).padStart(3, '0')}.html`;
+        } else {
+          alert("Surah tidak ditemukan.");
+        }
+      }
+    } else {
+      alert("Surah tidak ditemukan. Coba ketik nama lain.");
+    }
   }
 }
 
@@ -84,7 +133,7 @@ document.getElementById("searchSurah").addEventListener("input", function () {
   }
 
   for (const alias in aliasMap) {
-    if (alias.includes(normalized)) suggestions.add(aliasMap[alias]);
+    if (normalize(alias).includes(normalized)) suggestions.add(aliasMap[alias]);
   }
 
   suggestions.forEach(name => {
@@ -95,12 +144,15 @@ document.getElementById("searchSurah").addEventListener("input", function () {
     li.style.borderBottom = "1px solid #ccc";
     li.onclick = () => {
       const page = surahMap[name];
-      window.location.href = `halaman-${String(page).padStart(3, '0')}.html`;
+      if (page) {
+        window.location.href = `halaman-${String(page).padStart(3, '0')}.html`;
+      }
     };
     list.appendChild(li);
   });
 });
 </script>
+
 
   
   <img src="images/001_Al-Fatihah.webp" alt="Gambar Mushaf halaman 001 - Al-Fatihah">
