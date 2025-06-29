@@ -6,84 +6,116 @@
   <meta name="description" content="Tampilan halaman ke-001 dari Mushaf Al-Quran digital.">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: 'Amiri', serif; background: #fdfdfd; text-align: center; padding: 2rem; }
-    img { max-width: 95%; margin: 2rem auto; display: block; box-shadow: 0 0 15px rgba(0,0,0,0.2); }
-    nav { margin-top: 2rem; }
-    a { margin: 0 1rem; font-size: 1.1rem; text-decoration: none; color: #0077cc; }
-    a:hover { text-decoration: underline; }
+    body {
+      font-family: 'Amiri', serif;
+      background: #fdfdfd;
+      text-align: center;
+      padding: 2rem;
+    }
+    img {
+      max-width: 95%;
+      margin: 2rem auto;
+      display: block;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+    nav {
+      margin-top: 2rem;
+    }
+    a {
+      margin: 0 1rem;
+      font-size: 1.1rem;
+      text-decoration: none;
+      color: #0077cc;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    ul#suggestionList {
+      list-style: none;
+      padding: 0;
+      margin-top: 0.5em;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+      direction: ltr;
+    }
+    ul#suggestionList li {
+      background: #fff;
+      padding: 6px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+    ul#suggestionList li:hover {
+      background: #eef;
+    }
   </style>
 </head>
 <body>
   <h1>Halaman 001 - Mushaf Digital</h1>
 
+  <!-- Search Surah -->
+  <div style="text-align:center; margin-top:2em;">
+    <input type="text" id="searchSurah" placeholder="Search Surah..." style="width:60%; max-width:300px;" />
+    <button onclick="handleSearch()" style="padding: 0.5em 1em; margin-left: 0.5em;">Search</button>
+    <ul id="suggestionList"></ul>
+  </div>
 
-<!-- Search Surah -->
-<div style="text-align:center; margin-top:2em;">
-  <input type="text" id="searchSurah" placeholder="Search Surah..." style="width:60%; max-width:300px;" />
-  <button onclick="handleSearch()" style="padding: 0.5em 1em; margin-left: 0.5em;">Search</button>
-  <ul id="suggestionList" style="list-style:none; padding:0; margin-top:0.5em;"></ul>
-</div>
-
-<script>
+  <script>
     let surahMap = {};
     let aliasMap = {};
 
-    // Load data mapping
+    // Load mapping files
     Promise.all([
-      fetch("data/surah-mapping.json").then(res => res.json()),
-      fetch("data/surah-alias.json").then(res => res.json())
+      fetch("data/surah-mapping.json").then(r => r.json()),
+      fetch("data/surah-alias.json").then(r => r.json())
     ]).then(([surahData, aliasData]) => {
       surahMap = surahData;
       aliasMap = aliasData;
-      console.log("✅ surahMap & aliasMap loaded");
     });
 
-    function normalize(input) {
-      return input.trim().toLowerCase().replace(/[\s\W_]+/g, '');
+    function normalize(str) {
+      return str.trim().toLowerCase().replace(/[\s\W_]+/g, '');
     }
 
-    function resolveSurah(keyword) {
-      const normalized = normalize(keyword);
+    function resolveSurah(input) {
+      const norm = normalize(input);
 
-      // 1. Canonical match
       for (const name in surahMap) {
-        if (normalize(name).includes(normalized)) return name;
+        if (normalize(name).includes(norm)) return name;
       }
 
-      // 2. Alias map
-      if (aliasMap[normalized]) return aliasMap[normalized];
+      if (aliasMap[norm]) return aliasMap[norm];
 
       return null;
     }
 
     function handleSearch() {
       const keyword = document.getElementById("searchSurah").value;
-      const matchedName = resolveSurah(keyword);
+      const match = resolveSurah(keyword);
 
-      if (matchedName && surahMap[matchedName]) {
-        const page = surahMap[matchedName];
-        const url = `halaman-${String(page).padStart(3, '0')}.html`;
-        window.location.href = url;
+      if (match && surahMap[match]) {
+        const page = surahMap[match];
+        window.location.href = `halaman-${String(page).padStart(3, '0')}.html`;
       } else {
         alert("Surah tidak ditemukan.");
       }
     }
 
-    // Autocomplete / Suggestion
     document.getElementById("searchSurah").addEventListener("input", function () {
       const keyword = this.value;
-      const normalized = normalize(keyword);
+      const norm = normalize(keyword);
       const list = document.getElementById("suggestionList");
       list.innerHTML = "";
 
       const suggestions = new Set();
 
       for (const name in surahMap) {
-        if (normalize(name).includes(normalized)) suggestions.add(name);
+        if (normalize(name).includes(norm)) suggestions.add(name);
       }
 
       for (const alias in aliasMap) {
-        if (normalize(alias).includes(normalized)) suggestions.add(aliasMap[alias]);
+        if (normalize(alias).includes(norm)) suggestions.add(aliasMap[alias]);
       }
 
       suggestions.forEach(name => {
@@ -93,8 +125,6 @@
           const page = surahMap[name];
           if (page) {
             window.location.href = `halaman-${String(page).padStart(3, '0')}.html`;
-          } else {
-            alert("Surah ditemukan, tapi mapping-nya tidak valid.");
           }
         };
         list.appendChild(li);
@@ -105,12 +135,11 @@
       if (e.key === "Enter") handleSearch();
     });
   </script>
-  
+
   <img src="images/001_Al-Fatihah.webp" alt="Gambar Mushaf halaman 001 - Al-Fatihah">
   <nav>
     <a href="index.html">🏠 Beranda</a>
     <a href="halaman-002.html">Halaman 002 →</a>
   </nav>
 </body>
-
 </html>
